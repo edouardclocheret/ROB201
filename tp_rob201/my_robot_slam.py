@@ -14,6 +14,7 @@ from control import potential_field_control, reactive_obst_avoid
 from occupancy_grid import OccupancyGrid
 from planner import Planner
 
+from math import pi
 
 # Definition of our robot controller
 class MyRobotSlam(RobotAbstract):
@@ -43,30 +44,67 @@ class MyRobotSlam(RobotAbstract):
         # storage for pose after localization
         self.corrected_pose = np.array([0, 0, 0])
 
+        self.start = [439.0, 195,0]
+        self.goal = [50,-500,0] 
+        self.goalReached = False
+        self.trajet_printed = False
+
+    def change_goal_state(self):
+        self.goalReached = True
+
+
+
+    
+
     def control(self):
         """
         Main control function executed at each time step
         """
-        return self.control_tp1()
+        
+        if  self.goalReached :
+
+            
+            #L'arrivée est le départ et inversement
+            traj = Planner.plan(self.planner,np.array(self.start[0:2])+np.array(self.goal[0:2]), np.array(self.start[0:2]))
+            
+
+            
+            self.occupancy_grid.display_cv(self.odometer_values(), self.goal,traj)
+            
+            if not self.trajet_printed :
+                print(traj,"^^^^\nCeci est le trajet retour obtenu par A*")
+                self.trajet_printed =True
+
+            return {"forward": 0.0, "rotation": 0.0}
+        
+        else :
+            #TP3 :
+            self.tiny_slam.update_map(self.lidar(),self.odometer_values())
+            #TP4 :
+            self.tiny_slam.localise(self.lidar(),self.odometer_values())
+
+            return self.control_tp2(self.goal)
 
     def control_tp1(self):
         """
         Control function for TP1
         """
-        self.tiny_slam.compute()
+        #Cette fonction ne sert à rien (exercice pour utiliser le profiler)
+        #self.tiny_slam.compute()
 
         # Compute new command speed to perform obstacle avoidance
         command = reactive_obst_avoid(self.lidar())
         return command
 
-    def control_tp2(self):
+    def control_tp2(self, goal):
         """
         Control function for TP2
         """
         pose = self.odometer_values()
-        goal = [0,0,0]
+        
+        
 
         # Compute new command speed to perform obstacle avoidance
-        command = potential_field_control(self.lidar(), pose, goal)
+        command = potential_field_control(self.lidar(), pose, goal, self)
 
         return command

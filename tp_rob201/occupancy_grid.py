@@ -164,10 +164,28 @@ class OccupancyGrid:
         img2 = cv2.applyColorMap(src=img, colormap=cv2.COLORMAP_JET)
 
         if traj is not None:
-            traj_map_x, traj_map_y = self.conv_world_to_map(traj[0, :], -traj[1, :])
+            
+            for i in range(len(traj) - 1):
+                # Convertir les coordonnées du monde en coordonnées de la carte
+                pt_1 = self.conv_world_to_map(traj[i][0], traj[i][1])
+                pt_2 = self.conv_world_to_map(traj[i + 1][0], traj[i+1][1])
+                
+                # Dessiner une ligne entre les deux points
+                cv2.line(img2, tuple(pt_1), tuple(pt_2), (180, 180, 180), 2)
+            
+            """for j in range(len(traj)-1):
+                pt_1 = self.conv_world_to_map(439+100-traj[j][0],-(traj[j][1]-195))
+                pt_2 = self.conv_world_to_map(439+100-traj[j+1][0],-(traj[j+1][1]-195))
+                cv2.line(img2, pt_1, pt_2, (180, 180, 180), 2)
+                print("tracé de la ligne de", pt_1," à ",pt_2)"""
+            
+            #réécriture complète de la fonction car incompréhensible sinon
+            """traj_map_x, traj_map_y = self.conv_world_to_map(traj[0, :], -traj[1, :])
             traj_map = np.vstack((traj_map_x, traj_map_y))
             for i in range(len(traj_map_x) - 1):
-                cv2.line(img2, traj_map[:, i], traj_map[:, i + 1], (180, 180, 180), 2)
+                print("tracé de la ligne de", traj_map[:, i]," à ",traj_map[:, i + 1])
+                cv2.line(img2, traj_map[:, i], traj_map[:, i + 1], (180, 180, 180), 2)"""
+            
 
         if goal is not None:
             pt_x, pt_y = self.conv_world_to_map(goal[0], -goal[1])
